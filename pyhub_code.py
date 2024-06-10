@@ -8,11 +8,15 @@ import json
 from groq import Groq
 import random
 
+# Constants
 USER_DATA_DIR = os.path.join(os.path.expanduser('~'), 'PyHubData')
 USER_DATA_FILE = os.path.join(USER_DATA_DIR, 'users.json')
 NOTES_DATA_FILE = os.path.join(USER_DATA_DIR, 'notes.json')
+LOGIN_REWARD = 10  # Coins awarded on login
+
 os.makedirs(USER_DATA_DIR, exist_ok=True)
 
+# Utility functions
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -39,20 +43,43 @@ def save_notes():
 users = load_users()
 notes = load_notes()
 
+# User management functions
 def create_account(username, password):
     if username in users:
         return "User already exists."
-    users[username] = hash_password(password)
+    users[username] = {
+        'password': hash_password(password),
+        'balance': 0  # Initialize balance
+    }
     save_users()
     return "Account created successfully."
 
 def login(username, password):
     if username not in users:
         return "User not found."
-    if users[username] != hash_password(password):
+    if users[username]['password'] != hash_password(password):
         return "Incorrect password."
-    return "Login successful."
+    users[username]['balance'] += LOGIN_REWARD  # Reward coins on login
+    save_users()
+    return f"Login successful. You have been awarded {LOGIN_REWARD} coins."
 
+# Coin management functions
+def earn_coins(username, amount):
+    users[username]['balance'] += amount
+    save_users()
+    delay_print(f"You earned {amount} coins!", color="green")
+
+def spend_coins(username, amount):
+    if users[username]['balance'] >= amount:
+        users[username]['balance'] -= amount
+        save_users()
+        delay_print(f"{amount} coins spent.", color="red")
+        return True
+    else:
+        delay_print("Insufficient balance.", color="red")
+        return False
+
+# Text display functions
 def delay_print(text, color="white"):
     for char in text:
         rprint(f"[{color}]{char}[/{color}]", end='')
@@ -75,12 +102,12 @@ def fast_print(text, color="white"):
         time.sleep(0.01)
     rprint()
 
-#==================================================================================================
+# Image search function
 PEXELS_API_KEY = "YOUR_API_KEY_HERE"
 
 def search_images():
     delay_print("=== Search Images ===", color="cyan")
-    delay_print("WARMING: Modify the code to put your API key of pexels", color="red")
+    delay_print("WARNING: Modify the code to put your API key of Pexels", color="red")
     query = delay_input("Enter search query: ", color="yellow")
     
     headers = {
@@ -100,30 +127,30 @@ def search_images():
         else:
             delay_print(f"Found {data['total_results']} images. Showing top {len(data['photos'])}:", color="green")
             for photo in data['photos']:
-                delay_print(f"URL: {photo['url']}", color="blue")
+                fast_print(f"URL: {photo['url']}", color="blue")
     else:
         delay_print(f"Error: {response.status_code} - {response.text}", color="red")
-#==================================================================================================
-def hubgames():
+
+# Hubgames function
+def hubgames(username):
     delay_print("Welcome to hubgames, look the list of games: ", color="blue")
     fast_print('''
 1. Space room (not finish)
 2. Abandoned house (not finish)
-3. number guessing game
-(more comming soon)''')
+3. Number guessing game
+(more coming soon)''')
     chose = delay_input("Put the number of game: ")
     if chose == "1":
-        number_guessing_game()
-    if chose == "2":
-        abandoned_house()
-    if chose == "3": 
-        number_guessing_game()
-def abandoned_house():
-    delay_print("not finish")
+        delay_print("not finish", color="red")
+    elif chose == "2":
+        delay_print("not finish", color="red")
+    elif chose == "3":
+        if spend_coins(username, 5):  # Spend coins to play
+            number_guessing_game()
+    else:
+        delay_print("Invalid option.", color="red")
 
-def scape_room():
-    delay_print("not finish")
-
+# Number guessing game
 def number_guessing_game():
     delay_print("=== Number Guessing Game ===", color="green")
     number = random.randint(1, 100)
@@ -141,7 +168,8 @@ def number_guessing_game():
         else:
             delay_print(f"Congratulations! You guessed the number in {attempts} attempts.", color="green")
             break
-#==================================================================================================
+
+# Note motion function
 def note_motion(username):
     delay_print("=== Note Motion ===", color="cyan")
 
@@ -166,6 +194,7 @@ def note_motion(username):
             new_note = delay_input("Enter your new note: ", color="yellow")
             notes[username].append(new_note)
             save_notes()
+            earn_coins(username, 2)  # Earn coins for adding a note
             delay_print("Note added.", color="green")
 
         elif option == "2":
@@ -193,120 +222,97 @@ def note_motion(username):
 
         else:
             delay_print("Invalid option. Please try again.", color="red")
-#==================================================================================================
-def hubai():
+
+# Hubai function
+def hubai(username):
     delay_print("Welcome to hubai, look the list of ai: ")
     fast_print('''
-1: grok, made by API of groq, for talking
-2: Codte, made by API of groq, for codes
-3: Milenius, made by API of groq, for text role play(TRP)''')
-    delay_print('''WARMING: Modify the code and put your API keys in "YOUR_API_KEY_HERE"''', color="red")
-    chose = delay_input("put the number of IA you want")
+1: Grok, made by API of Groq, for talking
+2: Codte, made by API of Groq, for codes
+3: Milenius, made by API of Groq, for text role play (TRP)''')
+    delay_print('''WARNING: Modify the code and put your API keys in "YOUR_API_KEY_HERE"''', color="red")
+    chose = delay_input("Put the number of AI you want: ")
     if chose == "1":
         grok()
-    if chose == "2":
+    elif chose == "2":
         codte()
-    if chose == "3":
+    elif chose == "3":
         milenius()
     
+# AI interactions (dummy examples, replace with real API calls)
 def milenius():
-        client = Groq(
-            api_key="YOUR_API_KEY_HERE", )
-        delay_print(
-            "Tip: Put E to exit\n")
+    client = Groq(api_key="YOUR_API_KEY_HERE")
+    delay_print("Tip: Put E to exit\n")
 
-        while True:
-            user_input = delay_input("You: \n")
+    while True:
+        user_input = delay_input("You: \n")
 
-            if user_input.lower() == "s":
-                delay_print("Goodbye")
-            
+        if user_input.lower() == "s":
+            delay_print("Goodbye")
+            break
 
-            chat_completion = client.chat.completions.create(
-                messages=[{
-                "role":
-                "system",
-                "content":
-                "You are Grok, an ia create for play text role play (TRP)"
-            }, {
-                "role": "user",
-                "content": user_input,
-            }],
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are Grok, an IA created for text role play (TRP)"},
+                {"role": "user", "content": user_input}
+            ],
             model="llama3-8b-8192",
         )
 
-            response = chat_completion.choices[0].message.content
-
-            rprint("Grok: \n")
-            delay_print("", response)
-            print("\n")
+        response = chat_completion.choices[0].message.content
+        rprint("Grok: \n")
+        delay_print(response)
 
 def codte():
-        client = Groq(
-            api_key="YOUR_API_KEY_HERE", )
-        delay_print(
-            "Tip: Put E to exit\n")
+    client = Groq(api_key="YOUR_API_KEY_HERE")
+    delay_print("Tip: Put E to exit\n")
 
-        while True:
-            user_input = delay_input("You: \n")
+    while True:
+        user_input = delay_input("You: \n")
 
-            if user_input.lower() == "s":
-                delay_print("Goodbye")
-            
+        if user_input.lower() == "s":
+            delay_print("Goodbye")
+            break
 
-            chat_completion = client.chat.completions.create(
-                messages=[{
-                "role":
-                "system",
-                "content":
-                "You are Codte, an AI make for create a codes"
-            }, {
-                "role": "user",
-                "content": user_input,
-            }],
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are Codte, an AI made for creating code"},
+                {"role": "user", "content": user_input}
+            ],
             model="llama3-8b-8192",
         )
 
-            response = chat_completion.choices[0].message.content
-
-            rprint("Grok: \n")
-            delay_print(""+ response)
-            print("\n")
+        response = chat_completion.choices[0].message.content
+        rprint("Codte: \n")
+        delay_print(response)
 
 def grok():
-        client = Groq(
-            api_key="YOUR_API_KEY_HERE", )
-        delay_print(
-            "Tip: Put E to exit\n")
+    client = Groq(api_key="YOUR_API_KEY_HERE")
+    delay_print("Tip: Put E to exit\n")
 
-        while True:
-            user_input = delay_input("You: \n")
+    while True:
+        user_input = delay_input("You: \n")
 
-            if user_input.lower() == "s":
-                delay_print("Goodbye")
-            
+        if user_input.lower() == "s":
+            delay_print("Goodbye")
+            break
 
-            chat_completion = client.chat.completions.create(
-                messages=[{
-                "role":
-                "system",
-                "content":
-                "You are Grok, an ia create for chating with everything"
-            }, {
-                "role": "user",
-                "content": user_input,
-            }],
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are Grok, an AI created for chatting about everything"},
+                {"role": "user", "content": user_input}
+            ],
             model="llama3-8b-8192",
         )
 
-            response = chat_completion.choices[0].message.content
+        response = chat_completion.choices[0].message.content
+        rprint("Grok: \n")
+        delay_print(response)
 
-            rprint("Grok: \n")
-            delay_print(""+ response)
-            print("\n")
-#==================================================================================================
+# Account function
 def account(username):
     delay_print(f"Welcome, {username}!", color="cyan")
+    delay_print(f"Your current balance: {users[username]['balance']} coins", color="yellow")
     delay_print("Here are your options:")
     fast_print('''
 1: Hubgames
@@ -316,20 +322,21 @@ def account(username):
     choice = delay_input("Enter the number of what you want to do: ", color="cyan")
     if choice == "1":
         delay_print("Opening Hubgames...", color="blue")
-        hubgames()
+        hubgames(username)
     elif choice == "2":
         delay_print("Opening search images with Pexels API...", color="blue")
         search_images()
     elif choice == "3":
         delay_print("Opening Hubai (warning: Modify the code to use the AI function)", color="blue")
-        hubai()
+        hubai(username)
     elif choice == "4":
         delay_print("Opening Note Motion...", color="blue")
         note_motion(username)
     else:
         delay_print("Invalid option. Please try again.", color="red")
         account(username)
-#==================================================================================================
+
+# Main login function
 def main_login():
     rprint('''[green]
   ____   __   __  _   _    _   _    ____   
@@ -339,7 +346,7 @@ U|  _"\ u\ \ / / |'| |'|U |"|u| |U | __")u
  |_|       |_|   |_| |_| <<\___/   |____/  
  ||>>_ .-,//|(_  //   \\(__) )(   _|| \\_  
 (__)__) \_) (__)(_") ("_)   (__) (__) (__) \n
-    0.0.0.1
+    0.0.0.2
     (note: Not everything is ready)''')
     time.sleep(2)
     delay_print("Welcome to PyHub, a simple hub in constant updating. You need to create an account or log in to an account")
@@ -358,31 +365,30 @@ U|  _"\ u\ \ / / |'| |'|U |"|u| |U | __")u
     else:
         delay_print("Invalid option. Please try again.")
         main_login()
-#==================================================================================================
-def create_account_interface():
-    delay_print("==== Create Account ====", color="cyan")
-    username = delay_input("Username: ", color="yellow")
-    password = delay_input("Password: ", color="yellow")
-    confirmation = delay_input("Confirm your password: ", color="yellow")
 
-    if password != confirmation:
-        delay_print("Passwords do not match. Please try again.", color="red")
-        os.system("clear")
-        create_account_interface()
-    else:
-        result = create_account(username, password)
-        delay_print(result, color="green" if "successfully" in result else "red")
-        main_login()
-#==================================================================================================
-def login_interface():
-    delay_print("==== Login ====", color="cyan")
-    username = delay_input("Username: ", color="yellow")
-    password = delay_input("Password: ", color="yellow")
-    result = login(username, password)
-    delay_print(result, color="green" if "successful" in result else "red")
-    if "successful" in result:
+# Create account interface function
+def create_account_interface():
+    delay_print("=== Create Account ===", color="cyan")
+    username = delay_input("Enter your username: ", color="yellow")
+    password = delay_input("Enter your password: ", color="yellow")
+    message = create_account(username, password)
+    delay_print(message, color="green" if "successfully" in message else "red")
+    if "successfully" in message:
         account(username)
-#==================================================================================================
+    else:
+        main_login()
+
+# Login interface function
+def login_interface():
+    delay_print("=== Login ===", color="cyan")
+    username = delay_input("Enter your username: ", color="yellow")
+    password = delay_input("Enter your password: ", color="yellow")
+    message = login(username, password)
+    delay_print(message, color="green" if "successful" in message else "red")
+    if "successful" in message:
+        account(username)
+    else:
+        main_login()
 
 if __name__ == "__main__":
     main_login()
