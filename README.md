@@ -1,5 +1,4 @@
-# PyHub: how to use?
-To use Pyhub, you need to go into your terminal/shell and write: ```pip install requests```, ```pip install rich``` and ```pip install groq```. 
-After that, look for this text “YOUR_API_KEY_HERE” and replace it with your API keys. This code only uses the groq API and the pexels API, see the pexels API and the Groq console: 
-groq: https://console.groq.com/playground 
-Pexels: https://www.pexels.com/api/
+# PyHub: Como usar? / How to use?
+No Pyhub, existe algumas partes que pedem API e não deixam bem explicado, bom, antes de usar, va no site do unsplash developers e crie uma conta, faça a verificação e depois crie uma nova aplicação, onde você vai preencher oque for nescessario e depois, procure por API_KEY ou API_KEY_SECRET, copie e coloque na parte onde pede a API do unsplash. Você pode ter pegado tambem o Hubai, que usa a API do groq, você so vai acessar o `site https://console.groq.com/login`, faça sua conta e crie uma API, ambas as API's tem limites diarios
+/
+In Pyhub, there are some parts that ask for API and don't make it clear, well, before using it, go to the unsplash developers site and create an account, do the verification and then create a new application, where you will fill in what is necessary and then, look for API_KEY or API_KEY_SECRET, copy it and put it in the part where it asks for the unsplash API. You may also have taken Hubai, which uses the groq API, you will only access the `site https://console.groq.com/login`, make your account and create an API, both API's have daily limits.
